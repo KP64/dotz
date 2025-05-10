@@ -1,0 +1,33 @@
+name: Links
+
+on:
+  repository_dispatch:
+  workflow_dispatch:
+  schedule:
+    - cron: "00 18 * * *"
+
+permissions: {}
+
+jobs:
+  linkChecker:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write # required for peter-evans/create-issue-from-file
+    steps:
+      - uses: actions/checkout@cbb722410c2e876e24abbe8de2cc27693e501dcb
+        with:
+          persist-credentials: false
+      - name: Link Checker
+        id: lychee
+        uses: lycheeverse/lychee-action@f613c4a64e50d792e0b31ec34bbcbba12263c6a6
+        with:
+          fail: false
+          args: --header "accept=*/*" ./*.md ./*.nix ./**/*.toml ./**/*.rs
+
+      - name: Create Issue From File
+        if: steps.lychee.outputs.exit_code != 0
+        uses: peter-evans/create-issue-from-file@95d0c1c4050ffdacd9d5c8a0a66b3bf108f220c6
+        with:
+          title: Link Checker Report
+          content-filepath: ./lychee/out.md
+          labels: report, automated issue
