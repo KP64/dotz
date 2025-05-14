@@ -62,34 +62,14 @@
               # Nix lsp ❄️
               nil
 
-              # For the extra reinforcement 😂
-              cargo-mommy
-
-              # file watcher 👀
-              bacon
-
               # Next gen testing 🧪
               cargo-nextest
-              cargo-flamegraph
-              cargo-mutants
-              cargo-tarpaulin
 
               # License 📜
               cargo-deny
 
-              # supply chain ⛓️
-              cargo-vet
-              cargo-auditable
-              cargo-crev
-
               # Dependencies 📦
-              cargo-udeps
               cargo-machete
-
-              # Tasks 🛠️
-              cargo-make
-              cargo-chef
-              cargo-cross
 
               # Unsafe ☢️
               cargo-geiger
@@ -97,10 +77,6 @@
               # Inner workings ⚙️
               cargo-show-asm
               cargo-expand
-
-              # misc ❔
-              cargo-msrv
-              cargo-release
             ];
 
             nativeBuildInputs = [ (pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml) ];
