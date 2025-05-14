@@ -27,7 +27,7 @@ nix run github:KP64/dotz -- [OPTIONS]
 ```nix
 # flake.nix
 {
-    inputs.dotz.url = "github:KP64/dotz";
+  inputs.dotz.url = "github:KP64/dotz";
 }
 
 # your configuration
