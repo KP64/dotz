@@ -22,8 +22,8 @@ rustPlatform.buildRustPackage rec {
   useNextest = true;
 
   meta = {
-    description = "";
-    homepage = "";
+    description = "A colorscript that prints your terminal full of stuff.";
+    homepage = "https://github.com/KP64/dotz";
     license = lib.licenses.unlicense;
     maintainers = with lib.maintainers; [ KP64 ];
     mainProgram = pname;
