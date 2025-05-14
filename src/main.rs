@@ -160,7 +160,7 @@ where
 
     #[expect(
         clippy::indexing_slicing,
-        reason = "vec is guaranteed to be of correct length."
+        reason = "grid is guaranteed to be of correct length and height."
     )]
     while !is_quitting_char_read(Duration::from_millis(10))? {
         let (rand_col, rand_row) = (rand::random_range(0..u_cols), rand::random_range(0..u_rows));
