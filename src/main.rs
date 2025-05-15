@@ -60,12 +60,14 @@ where
 {
     let (cols, rows) = terminal::size()?;
 
-    for _ in itertools::iproduct!(0..cols, 0..rows) {
-        queue!(
-            writer,
-            SetForegroundColor(generate_color()),
-            Print(cli.char)
-        )?;
+    for _ in 0..cols {
+        for _ in 0..rows {
+            queue!(
+                writer,
+                SetForegroundColor(generate_color()),
+                Print(cli.char)
+            )?;
+        }
     }
 
     writer.flush()?;
