@@ -1,6 +1,6 @@
 # Dotz
 
-A colorscript that gradually fills your screen with (a) charachter.
+A colorscript that gradually fills your screen with (a) character.
 
 ![Preview](./demo.gif)
 

@@ -22,7 +22,7 @@ rustPlatform.buildRustPackage rec {
   useNextest = true;
 
   meta = {
-    description = "A colorscript that gradually fills your screen with (a) charachter.";
+    description = "A colorscript that gradually fills your screen with (a) character.";
     homepage = "https://github.com/KP64/dotz";
     license = lib.licenses.unlicense;
     maintainers = with lib.maintainers; [ KP64 ];

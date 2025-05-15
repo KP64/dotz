@@ -11,11 +11,7 @@ no-default-features = false
 feature-depth = 1
 
 [licenses]
-allow = [
-    "MIT",
-    "Unlicense",
-    "Unicode-3.0"
-]
+allow = ["MIT", "Unlicense", "Unicode-3.0"]
 # The confidence threshold for detecting a license from license text.
 # The higher the value, the more closely the license text must be to the
 # canonical license text of a valid SPDX license file.
