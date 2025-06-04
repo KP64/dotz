@@ -55,7 +55,7 @@
             taplo.enable = true;
           };
 
-          packages.default = pkgs.callPackage ./package.nix { };
+          packages.default = pkgs.callPackage ./package.nix { inherit (inputs) self; };
 
           devShells.default = pkgs.mkShell {
             packages = with pkgs; [

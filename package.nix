@@ -1,23 +1,19 @@
 {
+  self,
   lib,
   rustPlatform,
-  stdenv,
-  darwin,
   pkg-config,
-  openssl,
 }:
 
 rustPlatform.buildRustPackage rec {
   pname = "dotz";
   version = "0.1.0";
 
-  src = ./.;
+  src = self;
 
-  cargoLock.lockFile = ./Cargo.lock;
+  cargoLock.lockFile = "${self}/Cargo.lock";
 
   nativeBuildInputs = [ pkg-config ];
-
-  buildInputs = [ openssl ] ++ (lib.optional stdenv.isDarwin darwin.apple_sdk.frameworks.Security);
 
   useNextest = true;
 
