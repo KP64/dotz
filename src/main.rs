@@ -8,6 +8,7 @@ use crossterm::{
     style::{Color, Print, SetForegroundColor},
     terminal::{self, EnterAlternateScreen, LeaveAlternateScreen},
 };
+use rand::seq::IndexedMutRandom as _;
 use std::{
     fmt,
     io::{self, Write},
@@ -156,18 +157,17 @@ where
     W: Write,
 {
     let (columns, rows) = terminal::size()?;
-    let (u_cols, u_rows) = (usize::from(columns), usize::from(rows));
+    let mut grid = vec![vec![None; usize::from(rows)]; usize::from(columns)];
 
-    let mut grid: Vec<Vec<Option<Color>>> = vec![vec![None; u_rows]; u_cols];
-
-    #[expect(
-        clippy::indexing_slicing,
-        reason = "grid is guaranteed to be of correct length and height."
-    )]
+    let mut rng = rand::rng();
     while !is_quitting_char_read(Duration::from_millis(10))? {
-        let (rand_col, rand_row) = (rand::random_range(0..u_cols), rand::random_range(0..u_rows));
-
-        grid[rand_col][rand_row] = Some(generate_color());
+        let Some(vec) = grid.choose_mut(&mut rng) else {
+            continue;
+        };
+        let Some(ele) = vec.choose_mut(&mut rng) else {
+            continue;
+        };
+        *ele = Some(generate_color());
 
         for column in &grid {
             for row in column {
