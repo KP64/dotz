@@ -69,6 +69,7 @@
               cargo-deny
 
               # Dependencies 📦
+              cargo-edit
               cargo-machete
 
               # Unsafe ☢️
