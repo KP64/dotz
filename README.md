@@ -58,6 +58,11 @@ Options:
           - infinite:    Continuously print characters
           - random:      Randomly color individual cells over time
 
+  -i, --ips <IPS>
+          The loop iterations per second
+
+          [default: 240]
+
   -h, --help
           Print help (see a summary with '-h')
 

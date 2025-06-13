@@ -10,7 +10,7 @@ use crossterm::{
 };
 use rand::seq::IndexedMutRandom as _;
 use std::{
-    fmt,
+    error, fmt,
     io::{self, Write},
     time::Duration,
 };
@@ -26,6 +26,10 @@ struct Cli {
     /// The printing Mode
     #[arg(short, long, default_value_t = Mode::default())]
     mode: Mode,
+
+    /// The loop iterations per second
+    #[arg(short, long, default_value_t = 240.0)]
+    ips: f64,
 }
 
 /// Available printing modes.
@@ -49,32 +53,25 @@ impl fmt::Display for Mode {
             Self::Infinite => "infinite",
             Self::Random => "random",
         };
-        write!(f, "{str}")
+        f.write_str(str)
     }
 }
 
 /// Fills the terminal screen with `cli.char` in random colors,
 /// then blocks until the user quits.
-fn fill_screen<W>(cli: &Cli, mut writer: W) -> io::Result<()>
+fn fill_screen<W>(char: char, mut writer: W) -> io::Result<()>
 where
     W: Write,
 {
     let (cols, rows) = terminal::size()?;
-
     for _ in 0..cols {
         for _ in 0..rows {
-            queue!(
-                writer,
-                SetForegroundColor(generate_color()),
-                Print(cli.char)
-            )?;
+            queue!(writer, SetForegroundColor(generate_color()), Print(char))?;
         }
     }
-
     writer.flush()?;
 
     while !is_quitting_char_read(Duration::MAX)? {}
-
     Ok(())
 }
 
@@ -92,75 +89,71 @@ fn generate_color() -> Color {
 /// Waits the given duration for a keypress and returns a bool
 /// whether the Key quits the program.
 fn is_quitting_char_read(dur: Duration) -> io::Result<bool> {
-    if event::poll(dur)? {
-        if let Event::Key(
+    if !event::poll(dur)? {
+        return Ok(false);
+    }
+    Ok(matches!(
+        event::read()?,
+        Event::Key(
             KeyEvent {
                 code: KeyCode::Char('q'),
                 kind: KeyEventKind::Press,
                 modifiers: KeyModifiers::NONE,
                 ..
-            }
-            | KeyEvent {
+            } | KeyEvent {
                 code: KeyCode::Char('c'),
                 kind: KeyEventKind::Press,
                 modifiers: KeyModifiers::CONTROL,
                 ..
             },
-        ) = event::read()?
-        {
-            return Ok(true);
-        }
-    }
-
-    Ok(false)
+        )
+    ))
 }
 
-fn main() -> io::Result<()> {
-    let cli = Cli::parse();
+fn main() -> Result<(), Box<dyn error::Error>> {
+    let Cli { char, mode, ips } = Cli::parse();
+
+    let key_wait_dur = 1.0 / ips;
+    let Ok(dur) = Duration::try_from_secs_f64(key_wait_dur) else {
+        return Err(format!("Cannot divide by {ips}").into());
+    };
 
     terminal::enable_raw_mode()?;
-
     let mut stdout = io::stdout();
-
     execute!(stdout, EnterAlternateScreen, cursor::Hide)?;
 
-    match cli.mode {
-        Mode::FillScreen => fill_screen(&cli, &stdout),
-        Mode::Infinite => print_infinite(&cli, &stdout),
-        Mode::Random => print_random(&cli, &stdout),
+    match mode {
+        Mode::FillScreen => fill_screen(char, &stdout),
+        Mode::Infinite => print_infinite(char, &stdout, dur),
+        Mode::Random => print_random(char, &stdout, dur),
     }?;
 
     execute!(stdout, LeaveAlternateScreen)?;
-
-    terminal::disable_raw_mode()
+    terminal::disable_raw_mode()?;
+    Ok(())
 }
 
 /// Continuously print `cli.char` at the current cursor position in random colors.
-fn print_infinite<W>(cli: &Cli, mut writer: W) -> io::Result<()>
+fn print_infinite<W>(char: char, mut writer: W, dur: Duration) -> io::Result<()>
 where
     W: Write,
 {
-    while !is_quitting_char_read(Duration::from_millis(10))? {
-        execute!(
-            writer,
-            SetForegroundColor(generate_color()),
-            Print(cli.char)
-        )?;
+    while !is_quitting_char_read(dur)? {
+        execute!(writer, SetForegroundColor(generate_color()), Print(char))?;
     }
-
     Ok(())
 }
 
 /// Renders a grid of characters, changing the color of a single cell with each iteration.
-fn print_random<W>(cli: &Cli, mut writer: W) -> io::Result<()>
+fn print_random<W>(char: char, mut writer: W, dur: Duration) -> io::Result<()>
 where
     W: Write,
 {
     let (columns, rows) = terminal::size()?;
-    let mut grid = vec![vec![None; usize::from(rows)]; usize::from(columns)];
+    let mut grid = vec![vec![None; usize::from(columns)]; usize::from(rows)];
 
     let mut rng = rand::rng();
-    while !is_quitting_char_read(Duration::from_millis(10))? {
+    while !is_quitting_char_read(dur)? {
         let Some(vec) = grid.choose_mut(&mut rng) else {
             continue;
         };
@@ -169,16 +162,15 @@ where
         };
         *ele = Some(generate_color());
 
-        for column in &grid {
-            for row in column {
-                if let Some(color) = *row {
-                    queue!(writer, SetForegroundColor(color), Print(cli.char))?;
+        for row in &grid {
+            for cell in row {
+                if let Some(color) = *cell {
+                    queue!(writer, SetForegroundColor(color), Print(char))?;
                 } else {
                     queue!(writer, Print(' '))?;
                 }
             }
         }
-
         writer.flush()?;
     }
     Ok(())
