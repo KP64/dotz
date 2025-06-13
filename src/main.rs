@@ -23,13 +23,13 @@ struct Cli {
     #[arg(short, long, default_value_t = '.')]
     char: char,
 
-    /// The printing Mode
-    #[arg(short, long, default_value_t = Mode::default())]
-    mode: Mode,
-
     /// The loop iterations per second
     #[arg(short, long, default_value_t = 240.0)]
     ips: f64,
+
+    /// The printing Mode
+    #[arg(short, long, default_value_t = Mode::default())]
+    mode: Mode,
 }
 
 /// Available printing modes.

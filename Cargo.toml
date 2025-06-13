@@ -24,6 +24,7 @@ codegen-units = 1
 absolute_paths = "warn"
 allow_attributes = "deny"
 allow_attributes_without_reason = "deny"
+arbitrary_source_item_ordering = "warn"
 arithmetic_side_effects = "warn"
 as_pointer_underscore = "warn"
 as_underscore = "warn"
