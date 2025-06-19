@@ -80,7 +80,10 @@
               cargo-expand
             ];
 
-            nativeBuildInputs = [ (pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml) ];
+            nativeBuildInputs = with pkgs; [
+              mold
+              (rust-bin.fromRustupToolchainFile ./rust-toolchain.toml)
+            ];
           };
         };
     };

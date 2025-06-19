@@ -57,17 +57,23 @@ impl fmt::Display for Mode {
     }
 }
 
+/// # Returns
+/// the terminal area (x * y)
+fn terminal_area_size() -> io::Result<usize> {
+    let (cols, rows) = terminal::size()?;
+    let area = usize::from(cols).saturating_mul(usize::from(rows));
+    Ok(area)
+}
+
 /// Fills the terminal screen with `cli.char` in random colors,
 /// then blocks until the user quits.
 fn fill_screen<W>(char: char, mut writer: W) -> io::Result<()>
 where
     W: Write,
 {
-    let (cols, rows) = terminal::size()?;
-    for _ in 0..cols {
-        for _ in 0..rows {
-            queue!(writer, SetForegroundColor(generate_color()), Print(char))?;
-        }
+    let area = terminal_area_size()?;
+    for _ in 0..area {
+        queue!(writer, SetForegroundColor(generate_color()), Print(char))?;
     }
     writer.flush()?;
 
@@ -149,26 +155,21 @@ fn print_random<W>(char: char, mut writer: W, dur: Duration) -> io::Result<()>
 where
     W: Write,
 {
-    let (columns, rows) = terminal::size()?;
-    let mut grid = vec![vec![None; usize::from(columns)]; usize::from(rows)];
+    let area = terminal_area_size()?;
+    let mut grid = vec![None; area];
 
     let mut rng = rand::rng();
     while !is_quitting_char_read(dur)? {
-        let Some(vec) = grid.choose_mut(&mut rng) else {
-            continue;
-        };
-        let Some(ele) = vec.choose_mut(&mut rng) else {
+        let Some(ele) = grid.choose_mut(&mut rng) else {
             continue;
         };
         *ele = Some(generate_color());
 
-        for row in &grid {
-            for cell in row {
-                if let Some(color) = *cell {
-                    queue!(writer, SetForegroundColor(color), Print(char))?;
-                } else {
-                    queue!(writer, Print(' '))?;
-                }
+        for cell in &grid {
+            if let Some(color) = *cell {
+                queue!(writer, SetForegroundColor(color), Print(char))?;
+            } else {
+                queue!(writer, Print(' '))?;
             }
         }
         writer.flush()?;

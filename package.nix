@@ -3,6 +3,7 @@
   lib,
   rustPlatform,
   pkg-config,
+  mold,
 }:
 
 rustPlatform.buildRustPackage rec {
@@ -13,7 +14,10 @@ rustPlatform.buildRustPackage rec {
 
   cargoLock.lockFile = "${self}/Cargo.lock";
 
-  nativeBuildInputs = [ pkg-config ];
+  nativeBuildInputs = [
+    pkg-config
+    mold
+  ];
 
   useNextest = true;
 
