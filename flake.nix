@@ -30,7 +30,12 @@
       imports = [ inputs.treefmt-nix.flakeModule ];
 
       perSystem =
-        { pkgs, system, ... }:
+        {
+          self',
+          pkgs,
+          system,
+          ...
+        }:
         {
           _module.args.pkgs = import inputs.nixpkgs {
             inherit system;
@@ -58,6 +63,8 @@
           packages.default = pkgs.callPackage ./package.nix { inherit (inputs) self; };
 
           devShells.default = pkgs.mkShell {
+            inputsFrom = [ self'.packages.default ];
+
             packages = with pkgs; [
               # Nix lsp ❄️
               nil
@@ -78,11 +85,6 @@
               # Inner workings ⚙️
               cargo-show-asm
               cargo-expand
-            ];
-
-            nativeBuildInputs = with pkgs; [
-              mold
-              (rust-bin.fromRustupToolchainFile ./rust-toolchain.toml)
             ];
           };
         };

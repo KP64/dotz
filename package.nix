@@ -4,6 +4,7 @@
   rustPlatform,
   pkg-config,
   mold,
+  rust-bin,
 }:
 
 rustPlatform.buildRustPackage rec {
@@ -17,6 +18,7 @@ rustPlatform.buildRustPackage rec {
   nativeBuildInputs = [
     pkg-config
     mold
+    (rust-bin.fromRustupToolchainFile "${self}/rust-toolchain.toml")
   ];
 
   useNextest = true;
