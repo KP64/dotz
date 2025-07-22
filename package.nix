@@ -1,33 +1,35 @@
 {
   self,
   lib,
-  rustPlatform,
-  pkg-config,
+  makeRustPlatform,
   mold,
   rust-bin,
+  stdenv,
 }:
+let
+  rustToolchain = rust-bin.fromRustupToolchainFile "${self}/rust-toolchain.toml";
+  manifest = (lib.importTOML "${self}/Cargo.toml").package;
+in
+(makeRustPlatform rec {
+  rustc = rustToolchain;
+  cargo = rustc;
+}).buildRustPackage
+  rec {
+    pname = manifest.name;
+    inherit (manifest) version;
 
-rustPlatform.buildRustPackage rec {
-  pname = "dotz";
-  version = "0.1.0";
+    src = self;
+    cargoLock.lockFile = "${self}/Cargo.lock";
 
-  src = self;
+    nativeBuildInputs = lib.optional stdenv.isLinux mold;
 
-  cargoLock.lockFile = "${self}/Cargo.lock";
+    useNextest = true;
 
-  nativeBuildInputs = [
-    pkg-config
-    mold
-    (rust-bin.fromRustupToolchainFile "${self}/rust-toolchain.toml")
-  ];
-
-  useNextest = true;
-
-  meta = {
-    description = "A colorscript that gradually fills your screen with (a) character.";
-    homepage = "https://github.com/KP64/dotz";
-    license = lib.licenses.unlicense;
-    maintainers = with lib.maintainers; [ KP64 ];
-    mainProgram = pname;
-  };
-}
+    meta = {
+      description = "A colorscript that gradually fills your screen with (a) character.";
+      homepage = "https://github.com/KP64/dotz";
+      license = lib.licenses.unlicense;
+      maintainers = with lib.maintainers; [ KP64 ];
+      mainProgram = pname;
+    };
+  }
