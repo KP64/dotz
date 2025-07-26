@@ -14,7 +14,7 @@ Type q
 Ctrl+L
 Show
 
-Type "dotz -c +"
+Type "dotz infinite -c +"
 Enter
 Sleep 3s
 Hide
@@ -22,8 +22,15 @@ Type q
 Ctrl+L
 Show
 
-Type "dotz -c '~' -m random"
+Type "dotz random -c '~'"
 Enter
 Sleep 3s
+Hide
+Type q
+Ctrl+L
+Show
+
+Type "dotz spaced -c λ -s 6 -i 700"
+Enter
 
 Sleep 5s

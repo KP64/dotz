@@ -1,6 +1,6 @@
 //! A simple feature rich Colorscript.
 
-use clap::{Parser, ValueEnum};
+use clap::Parser as _;
 use crossterm::{
     cursor,
     event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers},
@@ -8,54 +8,13 @@ use crossterm::{
     style::{Color, Print, SetForegroundColor},
     terminal::{self, EnterAlternateScreen, LeaveAlternateScreen},
 };
+use dotz::{Cli, Mode};
 use rand::seq::IndexedMutRandom as _;
 use std::{
-    error, fmt,
+    error,
     io::{self, Write},
     time::Duration,
 };
-
-/// Command-line interface definition.
-#[derive(Parser)]
-#[command(version, about, long_about = None)]
-struct Cli {
-    /// The character to print
-    #[arg(short, long, default_value_t = '.')]
-    char: char,
-
-    /// The loop iterations per second
-    #[arg(short, long, default_value_t = 240.0)]
-    ips: f64,
-
-    /// The printing Mode
-    #[arg(short, long, default_value_t = Mode::default())]
-    mode: Mode,
-}
-
-/// Available printing modes.
-#[derive(Debug, Default, Clone, ValueEnum)]
-enum Mode {
-    /// Fill the screen immediately
-    FillScreen,
-
-    /// Continuously print characters
-    #[default]
-    Infinite,
-
-    /// Randomly color individual cells over time
-    Random,
-}
-
-impl fmt::Display for Mode {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let str = match *self {
-            Self::FillScreen => "fill-screen",
-            Self::Infinite => "infinite",
-            Self::Random => "random",
-        };
-        f.write_str(str)
-    }
-}
 
 /// # Returns
 /// the terminal area (x * y)
@@ -67,7 +26,7 @@ fn terminal_area_size() -> io::Result<usize> {
 
 /// Fills the terminal screen with `cli.char` in random colors,
 /// then blocks until the user quits.
-fn fill_screen<W>(char: char, mut writer: W) -> io::Result<()>
+fn fill_screen<W>(mut writer: W, char: char) -> io::Result<()>
 where
     W: Write,
 {
@@ -116,22 +75,40 @@ fn is_quitting_char_read(dur: Duration) -> io::Result<bool> {
     ))
 }
 
-fn main() -> Result<(), Box<dyn error::Error>> {
-    let Cli { char, mode, ips } = Cli::parse();
-
+/// Returns the input polling duration
+fn get_duration(ips: f64) -> Result<Duration, String> {
     let key_wait_dur = 1.0 / ips;
     let Ok(dur) = Duration::try_from_secs_f64(key_wait_dur) else {
-        return Err(format!("Cannot divide by {ips}").into());
+        return Err(format!("Cannot divide by {ips}"));
     };
+    Ok(dur)
+}
+
+fn main() -> Result<(), Box<dyn error::Error>> {
+    let Cli { char, mode } = Cli::parse();
 
     terminal::enable_raw_mode()?;
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen, cursor::Hide)?;
 
     match mode {
-        Mode::FillScreen => fill_screen(char, &stdout),
-        Mode::Infinite => print_infinite(char, &stdout, dur),
-        Mode::Random => print_random(char, &stdout, dur),
+        Some(Mode::FillScreen) | None => fill_screen(&stdout, char),
+        Some(Mode::Infinite { speed }) => {
+            let dur = get_duration(speed.ips)?;
+            print_infinite(&stdout, char, dur)
+        }
+        Some(Mode::Random { speed }) => {
+            let dur = get_duration(speed.ips)?;
+            print_random(&stdout, char, dur)
+        }
+        Some(Mode::Spaced {
+            separator,
+            spaces,
+            speed,
+        }) => {
+            let dur = get_duration(speed.ips)?;
+            print_spaced(&stdout, char, dur, separator, spaces)
+        }
     }?;
 
     execute!(stdout, LeaveAlternateScreen)?;
@@ -139,8 +116,36 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     Ok(())
 }
 
+/// Prints the Spaced mode
+fn print_spaced<W>(
+    mut writer: W,
+    char: char,
+    dur: Duration,
+    separator: char,
+    spaces: usize,
+) -> io::Result<()>
+where
+    W: Write,
+{
+    // Do not print the separators first,
+    // because it looks ugly xD
+    let mut counter = spaces;
+
+    while !is_quitting_char_read(dur)? {
+        let ch = if spaces.saturating_sub(counter) == 0 {
+            counter = 0;
+            char
+        } else {
+            counter = counter.wrapping_add(1);
+            separator
+        };
+        execute!(writer, SetForegroundColor(generate_color()), Print(ch))?;
+    }
+    Ok(())
+}
+
 /// Continuously print `cli.char` at the current cursor position in random colors.
-fn print_infinite<W>(char: char, mut writer: W, dur: Duration) -> io::Result<()>
+fn print_infinite<W>(mut writer: W, char: char, dur: Duration) -> io::Result<()>
 where
     W: Write,
 {
@@ -151,7 +156,7 @@ where
 }
 
 /// Renders a grid of characters, changing the color of a single cell with each iteration.
-fn print_random<W>(char: char, mut writer: W, dur: Duration) -> io::Result<()>
+fn print_random<W>(mut writer: W, char: char, dur: Duration) -> io::Result<()>
 where
     W: Write,
 {
@@ -175,16 +180,4 @@ where
         writer.flush()?;
     }
     Ok(())
-}
-
-#[cfg(test)]
-mod test {
-    use crate::Cli;
-    use clap::CommandFactory as _;
-
-    /// Verifies that the CLI flags/options do not conflict.
-    #[test]
-    fn verify_cli() {
-        Cli::command().debug_assert();
-    }
 }
