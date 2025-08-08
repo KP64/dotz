@@ -10,7 +10,7 @@ homepage = "https://github.com/KP64/dotz"
 repository = "https://github.com/KP64/dotz"
 keywords = ["cli, terminal, ricing, color, script"]
 categories = ["command-line-utilities"]
-rust-version = "1.88.0"
+rust-version = "1.89.0"
 
 [dependencies]
 clap = { version = "4.5.43", features = ["derive"] }
