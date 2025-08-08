@@ -10,11 +10,6 @@
     };
 
     flake-parts.url = "github:hercules-ci/flake-parts";
-
-    treefmt-nix = {
-      url = "github:numtide/treefmt-nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
 
   outputs =
@@ -27,66 +22,28 @@
         "x86_64-linux"
       ];
 
-      imports = [ inputs.treefmt-nix.flakeModule ];
+      imports = [ flake-parts.flakeModules.partitions ];
+
+      partitionedAttrs = {
+        checks = "dev";
+        devShells = "dev";
+        formatter = "dev";
+      };
+
+      partitions.dev = {
+        extraInputsFlake = ./nix/dev;
+        module.imports = [ ./nix/dev/flake-module.nix ];
+      };
 
       perSystem =
-        {
-          self',
-          pkgs,
-          system,
-          ...
-        }:
+        { pkgs, system, ... }:
         {
           _module.args.pkgs = import inputs.nixpkgs {
             inherit system;
             overlays = [ (import inputs.rust-overlay) ];
           };
 
-          treefmt.programs = {
-            deadnix.enable = true;
-            statix.enable = true;
-            nixfmt = {
-              enable = true;
-              strict = true;
-            };
-
-            prettier.enable = true;
-
-            shfmt.enable = true;
-            shellcheck.enable = true;
-
-            rustfmt.enable = true;
-
-            taplo.enable = true;
-          };
-
-          packages.default = pkgs.callPackage ./package.nix { inherit (inputs) self; };
-
-          devShells.default = pkgs.mkShell {
-            inputsFrom = [ self'.packages.default ];
-
-            packages = with pkgs; [
-              # Nix lsp ❄️
-              nil
-
-              # Next gen testing 🧪
-              cargo-nextest
-
-              # License 📜
-              cargo-deny
-
-              # Dependencies 📦
-              cargo-edit
-              cargo-machete
-
-              # Unsafe ☢️
-              cargo-geiger
-
-              # Inner workings ⚙️
-              cargo-show-asm
-              cargo-expand
-            ];
-          };
+          packages.default = pkgs.callPackage ./nix/package.nix { inherit (inputs) self; };
         };
     };
 }
