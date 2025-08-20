@@ -1,9 +1,8 @@
 //! Dotz Utils
 
 use clap::{Args, Parser, Subcommand, arg};
-use crossterm as _;
-use rand as _;
-use std::fmt;
+use crossterm::{style::Color, terminal};
+use std::{fmt, time::Duration};
 
 /// The default character to be
 /// printed in any case.
@@ -83,6 +82,43 @@ impl fmt::Display for Mode {
 
         f.write_str(str)
     }
+}
+
+/// Generate a random ANSI Xterm system color.
+/// This is done to fully support Xterm and increase usability.
+///
+/// # Returns
+///
+/// A `Color::AnsiValue` in the range 0..16.
+#[must_use]
+pub fn generate_ansi_color() -> Color {
+    Color::AnsiValue(rand::random_range(0..16))
+}
+
+/// Returns the input polling duration
+///
+/// # Errors
+///
+/// When ips is 0
+pub fn get_duration(ips: f64) -> Result<Duration, String> {
+    let key_wait_dur = 1.0 / ips;
+    Duration::try_from_secs_f64(key_wait_dur).map_err(|_err| format!("{ips} ips is invalid"))
+}
+
+/// Gets the terminal area
+///
+/// # Returns
+///
+/// the terminal area in pixels (width * height)
+#[expect(
+    clippy::missing_panics_doc,
+    reason = "No need for docs, as it shouldn't panic"
+)]
+#[must_use]
+pub fn terminal_area_size() -> usize {
+    #[expect(clippy::unwrap_used, reason = "Shouldn't really panic")]
+    let (cols, rows) = terminal::size().unwrap();
+    usize::from(cols).saturating_mul(usize::from(rows))
 }
 
 /// Check for the Spaced mode, whether it makes sense
