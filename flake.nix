@@ -4,12 +4,20 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
-    rust-overlay = {
-      url = "github:oxalica/rust-overlay";
+    fenix = {
+      url = "github:nix-community/fenix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
     flake-parts.url = "github:hercules-ci/flake-parts";
+
+    naersk = {
+      url = "github:nix-community/naersk";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+        fenix.follows = "fenix";
+      };
+    };
   };
 
   outputs =
@@ -22,7 +30,10 @@
         "x86_64-linux"
       ];
 
-      imports = [ flake-parts.flakeModules.partitions ];
+      imports = [
+        ./nix/package.nix
+        flake-parts.flakeModules.partitions
+      ];
 
       partitionedAttrs = {
         checks = "dev";
@@ -32,18 +43,7 @@
 
       partitions.dev = {
         extraInputsFlake = ./nix/dev;
-        module.imports = [ ./nix/dev/flake-module.nix ];
+        module.imports = [ ./nix/dev ];
       };
-
-      perSystem =
-        { pkgs, system, ... }:
-        {
-          _module.args.pkgs = import inputs.nixpkgs {
-            inherit system;
-            overlays = [ (import inputs.rust-overlay) ];
-          };
-
-          packages.default = pkgs.callPackage ./nix/package.nix { inherit (inputs) self; };
-        };
     };
 }
