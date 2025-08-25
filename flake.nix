@@ -2,7 +2,7 @@
   description = "Fully featured flake ❄️ for rusty 🦀 development";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
     fenix = {
       url = "github:nix-community/fenix";

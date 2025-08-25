@@ -41,13 +41,6 @@
           # Dependencies 📦
           cargo-edit
           cargo-machete
-
-          # Unsafe ☢️
-          cargo-geiger
-
-          # Inner workings ⚙️
-          cargo-show-asm
-          cargo-expand
         ];
       };
     };
