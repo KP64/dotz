@@ -23,9 +23,9 @@
         taplo.enable = true;
       };
 
-      checks = self'.packages;
-
       devShells.default = pkgs.mkShell {
+        name = "dotz";
+
         inputsFrom = [ self'.packages.default ];
 
         packages = with pkgs; [
