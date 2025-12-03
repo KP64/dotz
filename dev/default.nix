@@ -26,7 +26,7 @@
       devShells.default = pkgs.mkShell {
         name = "dotz";
 
-        inputsFrom = [ self'.packages.default ];
+        inputsFrom = builtins.attrValues self'.packages;
 
         packages = with pkgs; [
           # Nix lsp ❄️

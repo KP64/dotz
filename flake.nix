@@ -43,11 +43,7 @@
           ...
         }:
         let
-          toolchain = inputs'.fenix.packages.fromToolchainFile {
-            file = ./rust-toolchain.toml;
-            sha256 = "sha256-2eWc3xVTKqg5wKSHGwt1XoM/kUBC6y3MWfKg74Zn+fY=";
-          };
-          craneLib = (inputs.crane.mkLib pkgs).overrideToolchain (_: toolchain);
+          craneLib = (inputs.crane.mkLib pkgs).overrideToolchain inputs'.fenix.packages.stable.toolchain;
 
           commonArgs = {
             src = craneLib.cleanCargoSource ./.;
