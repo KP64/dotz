@@ -100,18 +100,20 @@ fn print_spaced<W>(
 where
     W: io::Write,
 {
-    let mut chars_to_print = spaces;
-
-    while !is_quitting_char_read(dur)? {
-        let ch = if chars_to_print == 0 { separator } else { char };
-        execute!(
-            writer,
-            SetForegroundColor(dotz::generate_ansi_color()),
-            Print(ch)
-        )?;
-        chars_to_print = chars_to_print.checked_sub(1).unwrap_or(spaces);
-    }
-    Ok(())
+    (0..=spaces)
+        .rev()
+        .cycle()
+        .map_while(|chars_to_print| {
+            let ch = if chars_to_print == 0 { separator } else { char };
+            is_quitting_char_read(dur).is_ok_and(|b| !b).then_some(ch)
+        })
+        .try_for_each(|ch| {
+            execute!(
+                writer,
+                SetForegroundColor(dotz::generate_ansi_color()),
+                Print(ch)
+            )
+        })
 }
 
 /// Continuously print `cli.char` at the current cursor position in random colors.
