@@ -31,9 +31,10 @@ pub struct Speed {
 }
 
 /// Available printing modes.
-#[derive(Subcommand, Debug, Clone)]
+#[derive(Default, Subcommand, Debug, Clone)]
 pub enum Mode {
     /// Fill the screen immediately
+    #[default]
     FillScreen,
 
     /// Continuously print characters

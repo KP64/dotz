@@ -57,29 +57,30 @@ fn is_quitting_char_read(dur: Duration) -> io::Result<bool> {
 }
 
 fn main() -> Result<(), Box<dyn error::Error>> {
-    let Cli { char, mode } = Cli::parse();
+    let cli = Cli::parse();
 
     terminal::enable_raw_mode()?;
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen, cursor::Hide)?;
 
+    let mode = cli.mode.unwrap_or_default();
     match mode {
-        Some(Mode::FillScreen) | None => fill_screen(&stdout, char),
-        Some(Mode::Infinite { speed }) => {
+        Mode::FillScreen => fill_screen(&stdout, cli.char),
+        Mode::Infinite { speed } => {
             let dur = dotz::get_duration(speed.ips)?;
-            print_infinite(&stdout, char, dur)
+            print_infinite(&stdout, cli.char, dur)
         }
-        Some(Mode::Random { speed }) => {
+        Mode::Random { speed } => {
             let dur = dotz::get_duration(speed.ips)?;
-            print_random(&stdout, char, dur)
+            print_random(&stdout, cli.char, dur)
         }
-        Some(Mode::Spaced {
+        Mode::Spaced {
             separator,
             spaces,
             speed,
-        }) => {
+        } => {
             let dur = dotz::get_duration(speed.ips)?;
-            print_spaced(&stdout, char, dur, separator, spaces)
+            print_spaced(&stdout, cli.char, dur, separator, spaces)
         }
     }?;
 
