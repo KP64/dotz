@@ -3,7 +3,7 @@
   imports = [ inputs.treefmt-nix.flakeModule ];
 
   perSystem =
-    { self', pkgs, ... }:
+    { config, pkgs, ... }:
     {
       treefmt.programs = {
         deadnix.enable = true;
@@ -26,11 +26,13 @@
       devShells.default = pkgs.mkShell {
         name = "dotz";
 
-        inputsFrom = builtins.attrValues self'.packages;
+        inputsFrom = builtins.attrValues config.packages;
 
         packages = with pkgs; [
           # Nix lsp ❄️
           nil
+
+          vhs
 
           # Next gen testing 🧪
           cargo-nextest
