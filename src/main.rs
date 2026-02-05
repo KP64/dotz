@@ -146,10 +146,9 @@ where
 
     let mut rng = rand::rng();
     while !is_quitting_char_read(dur)? {
-        let Some(ele) = grid.choose_mut(&mut rng) else {
-            continue;
-        };
-        *ele = Some(dotz::generate_ansi_color());
+        let _old_cell_color = grid
+            .choose_mut(&mut rng)
+            .map(|color| color.replace(dotz::generate_ansi_color()));
 
         for cell in &grid {
             if let Some(color) = *cell {
