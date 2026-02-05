@@ -18,7 +18,7 @@ fn fill_screen<W>(mut writer: W, char: char) -> io::Result<()>
 where
     W: io::Write,
 {
-    let area = dotz::terminal_area_size();
+    let area = dotz::terminal_area_size()?;
     for _ in 0..area {
         queue!(
             writer,
@@ -141,7 +141,7 @@ fn print_random<W>(mut writer: W, char: char, dur: Duration) -> io::Result<()>
 where
     W: io::Write,
 {
-    let area = dotz::terminal_area_size();
+    let area = dotz::terminal_area_size()?;
     let mut grid = vec![None; area];
 
     let mut rng = rand::rng();

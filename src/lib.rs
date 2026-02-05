@@ -2,7 +2,7 @@
 
 use clap::{Args, Parser, Subcommand};
 use crossterm::{style::Color, terminal};
-use std::{fmt, time::Duration};
+use std::{fmt, io, time::Duration};
 
 /// The default character to be
 /// printed in any case.
@@ -111,15 +111,12 @@ pub fn get_duration(ips: f64) -> Result<Duration, String> {
 /// # Returns
 ///
 /// the terminal area in pixels (width * height)
-#[expect(
-    clippy::missing_panics_doc,
-    reason = "No need for docs, as it shouldn't panic"
-)]
-#[must_use]
-pub fn terminal_area_size() -> usize {
-    #[expect(clippy::unwrap_used, reason = "Shouldn't really panic")]
-    let (cols, rows) = terminal::size().unwrap();
-    usize::from(cols).saturating_mul(usize::from(rows))
+///
+/// # Errors
+///
+/// If no tty is detected
+pub fn terminal_area_size() -> io::Result<usize> {
+    terminal::size().map(|(cols, rows)| usize::from(cols).saturating_mul(usize::from(rows)))
 }
 
 /// Check for the Spaced mode, whether it makes sense
