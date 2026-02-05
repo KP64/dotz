@@ -37,26 +37,6 @@ nix run github:KP64/dotz -- [OPTIONS]
 }
 ```
 
-## Usage
-
-```txt
-A colorscript that gradually fills your screen with (a) character.
-
-Usage: dotz [OPTIONS] [COMMAND]
-
-Commands:
-  fill-screen  Fill the screen immediately
-  infinite     Continuously print characters
-  random       Randomly color individual cells over time
-  spaced       Print a Character every few spaces
-  help         Print this message or the help of the given subcommand(s)
-
-Options:
-  -c, --char <CHAR>  The character to be printed [default: .]
-  -h, --help         Print help
-  -V, --version      Print version
-```
-
 ## (Un)License
 
 dotz is released into the public domain.
