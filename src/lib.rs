@@ -4,16 +4,12 @@ use clap::{Args, Parser, Subcommand};
 use crossterm::{style::Color, terminal};
 use std::{fmt, io, time::Duration};
 
-/// The default character to be
-/// printed in any case.
-const DEFAULT_CHAR: char = '.';
-
 /// The main command line Parser
 #[derive(Parser)]
 #[command(version, about, long_about = None, propagate_version = true)]
 pub struct Cli {
     /// The character to be printed
-    #[arg(short, long, default_value_t = DEFAULT_CHAR, global = true)]
+    #[arg(short, long, default_value_t = '.', global = true)]
     pub char: char,
 
     /// The printing mode
@@ -53,7 +49,7 @@ pub enum Mode {
         speed: Speed,
     },
 
-    /// Print a Character every few spaces
+    /// Print a separator character every few spaces
     Spaced {
         /// The Speed in which to print
         /// the characters
@@ -61,14 +57,13 @@ pub enum Mode {
         speed: Speed,
 
         /// The separator character that is
-        /// printed between each character to print
-        #[arg(short = 'S', long, default_value_t = DEFAULT_CHAR)]
+        /// printed between every few spaces
+        #[arg(short = 'S', long, default_value_t = '*')]
         separator: char,
 
-        /// The amount of separator characters
-        /// between each character to print
-        #[arg(short, long, default_value_t = 3, value_parser = valid_spacing)]
-        spaces: usize,
+        /// The amount of characters between separator characters
+        #[arg(short, long, default_value_t = 3, value_parser = clap::value_parser!(u16).range(1..))]
+        spaces: u16,
     },
 }
 
@@ -117,20 +112,6 @@ pub fn get_duration(ips: f64) -> Result<Duration, String> {
 /// If no tty is detected
 pub fn terminal_area_size() -> io::Result<usize> {
     terminal::size().map(|(cols, rows)| usize::from(cols).saturating_mul(usize::from(rows)))
-}
-
-/// Check for the Spaced mode, whether it makes sense
-/// for the user to use that mode or fall back to the
-/// infinite mode.
-fn valid_spacing(input: &str) -> Result<usize, String> {
-    let spaces = input
-        .parse::<usize>()
-        .map_err(|_err| format!("`{input}` is not a valid number"))?;
-    if spaces == 0 {
-        Err("You should use the `infinite` mode if you don't want any spaces".to_owned())
-    } else {
-        Ok(spaces)
-    }
 }
 
 #[cfg(test)]

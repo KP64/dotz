@@ -89,34 +89,27 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     Ok(())
 }
 
-/// Prints the Spaced mode
+/// Print the separator every few characters/spaces
 fn print_spaced<W>(
     mut writer: W,
     char: char,
     dur: Duration,
     separator: char,
-    spaces: usize,
+    spaces: u16,
 ) -> io::Result<()>
 where
     W: io::Write,
 {
-    // Do not print the separators first,
-    // because it looks ugly xD
-    let mut counter = spaces;
+    let mut chars_to_print = spaces;
 
     while !is_quitting_char_read(dur)? {
-        let ch = if spaces.saturating_sub(counter) == 0 {
-            counter = 0;
-            char
-        } else {
-            counter = counter.wrapping_add(1);
-            separator
-        };
+        let ch = if chars_to_print == 0 { separator } else { char };
         execute!(
             writer,
             SetForegroundColor(dotz::generate_ansi_color()),
             Print(ch)
         )?;
+        chars_to_print = chars_to_print.checked_sub(1).unwrap_or(spaces);
     }
     Ok(())
 }
