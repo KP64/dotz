@@ -1,6 +1,6 @@
 //! Dotz Utils
 
-use clap::{Args, Parser, Subcommand, arg};
+use clap::{Args, Parser, Subcommand};
 use crossterm::{style::Color, terminal};
 use std::{fmt, time::Duration};
 
