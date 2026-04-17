@@ -1,0 +1,15 @@
+allow-dbg-in-tests = true
+allow-expect-in-tests = true
+allow-indexing-slicing-in-tests = true
+allow-panic-in-tests = true
+allow-unwrap-in-tests = true
+allow-print-in-tests = true
+avoid-breaking-exported-api = false
+check-incompatible-msrv-in-tests = true
+check-inconsistent-struct-field-initializers = true
+check-private-items = true
+enforce-iter-loop-reborrow = true
+lint-commented-code = true
+upper-case-acronyms-aggressive = true
+warn-on-all-wildcard-imports = true
+warn-unsafe-macro-metavars-in-private-macros = true
