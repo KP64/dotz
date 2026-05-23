@@ -2,7 +2,12 @@
   description = "Fully featured flake ❄️ for rusty 🦀 development";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+
+    advisory-db = {
+      url = "github:rustsec/advisory-db";
+      flake = false;
+    };
 
     crane.url = "github:ipetkov/crane";
 
@@ -17,8 +22,6 @@
   outputs =
     inputs@{ flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
-      debug = true;
-
       systems = inputs.nixpkgs.lib.systems.flakeExposed;
 
       imports = [ flake-parts.flakeModules.partitions ];
@@ -33,10 +36,9 @@
         extraInputsFlake = ./dev;
         module.imports = [ ./dev ];
       };
-
       perSystem =
         {
-          self',
+          config,
           inputs',
           lib,
           pkgs,
@@ -52,22 +54,27 @@
           };
 
           cargoArtifacts = craneLib.buildDepsOnly commonArgs;
-          dotz = craneLib.buildPackage (commonArgs // { inherit cargoArtifacts; });
+          sneaky-secrets = craneLib.buildPackage (commonArgs // { inherit cargoArtifacts; });
         in
         {
-          packages.default = dotz;
+          packages.default = sneaky-secrets;
 
-          checks = self'.packages // {
-            dotzClippy = craneLib.cargoClippy (
+          checks = config.packages // {
+            audit = craneLib.cargoAudit {
+              inherit (commonArgs) src;
+              inherit (inputs) advisory-db;
+            };
+            clippy = craneLib.cargoClippy (
               commonArgs
               // {
                 inherit cargoArtifacts;
                 cargoClippyExtraArgs = "--all-targets";
               }
             );
-            dotzDoc = craneLib.cargoDoc (commonArgs // { inherit cargoArtifacts; });
-            dotzDeny = craneLib.cargoDeny { inherit (commonArgs) src; };
-            dotzNextest = craneLib.cargoNextest (commonArgs // { inherit cargoArtifacts; });
+            deny = craneLib.cargoDeny { inherit (commonArgs) src; };
+            doc = craneLib.cargoDoc (commonArgs // { inherit cargoArtifacts; });
+            nextest = craneLib.cargoNextest (commonArgs // { inherit cargoArtifacts; });
+            tarpaulin = craneLib.cargoTarpaulin (commonArgs // { inherit cargoArtifacts; });
           };
         };
     };
