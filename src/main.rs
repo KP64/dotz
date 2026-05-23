@@ -6,7 +6,7 @@
 )]
 
 use clap::Parser as _;
-use core::time::Duration;
+use core::{iter, time::Duration};
 use crossterm::{
     cursor,
     event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers},
@@ -129,14 +129,16 @@ fn print_infinite<W>(mut writer: W, char: char, dur: Duration) -> io::Result<()>
 where
     W: io::Write,
 {
-    while !is_quitting_char_read(dur)? {
-        execute!(
-            writer,
-            SetForegroundColor(dotz::generate_ansi_color()),
-            Print(char)
-        )?;
-    }
-    Ok(())
+    iter::once(())
+        .cycle()
+        .take_while(|&()| is_quitting_char_read(dur).is_ok_and(|should_quit| !should_quit))
+        .try_for_each(|()| {
+            execute!(
+                writer,
+                SetForegroundColor(dotz::generate_ansi_color()),
+                Print(char)
+            )
+        })
 }
 
 /// Renders a grid of characters, changing the color of a single cell with each iteration.
@@ -148,16 +150,19 @@ where
 
     let mut rng = rand::rng();
 
-    while !is_quitting_char_read(dur)? {
-        let x = rng.random_range(..width);
-        let y = rng.random_range(..height);
-
-        execute!(
-            writer,
-            cursor::MoveTo(x, y),
-            SetForegroundColor(dotz::generate_ansi_color()),
-            Print(ch)
-        )?;
-    }
-    Ok(())
+    iter::once(())
+        .cycle()
+        .map_while(|()| {
+            is_quitting_char_read(dur)
+                .is_ok_and(|should_quit| !should_quit)
+                .then(|| (rng.random_range(..width), rng.random_range(..height)))
+        })
+        .try_for_each(|(x, y)| {
+            execute!(
+                writer,
+                cursor::MoveTo(x, y),
+                SetForegroundColor(dotz::generate_ansi_color()),
+                Print(ch)
+            )
+        })
 }

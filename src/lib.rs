@@ -1,8 +1,9 @@
 //! Dotz Utils.
 
 use clap::{Args, Parser, Subcommand};
+use core::{fmt, time::Duration};
 use crossterm::{style::Color, terminal};
-use std::{fmt, io, time::Duration};
+use std::io;
 
 /// The main command line Parser.
 #[derive(Parser)]
