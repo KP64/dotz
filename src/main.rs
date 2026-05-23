@@ -1,16 +1,22 @@
 //! A simple feature rich Colorscript.
 
+#![expect(
+    clippy::missing_errors_doc,
+    reason = "errors are mostly due to external factors"
+)]
+
 use clap::Parser as _;
+use core::{cmp::Ordering, time::Duration};
 use crossterm::{
-    cursor,
+    cursor::{self, MoveDown, MoveLeft, MoveRight, MoveUp},
     event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers},
     execute, queue,
     style::{Print, SetForegroundColor},
     terminal::{self, EnterAlternateScreen, LeaveAlternateScreen},
 };
 use dotz::{Cli, Mode};
-use rand::seq::IndexedMutRandom as _;
-use std::{error, io, time::Duration};
+use rand::RngExt as _;
+use std::{error, io};
 
 /// Fills the terminal screen with `cli.char` in random colors,
 /// then blocks until the user quits.
@@ -89,7 +95,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     Ok(())
 }
 
-/// Print the separator every few characters/spaces
+/// Print the separator every few characters/spaces.
 fn print_spaced<W>(
     mut writer: W,
     char: char,
@@ -105,7 +111,9 @@ where
         .cycle()
         .map_while(|chars_to_print| {
             let ch = if chars_to_print == 0 { separator } else { char };
-            is_quitting_char_read(dur).is_ok_and(|b| !b).then_some(ch)
+            is_quitting_char_read(dur)
+                .is_ok_and(|should_quit| !should_quit)
+                .then_some(ch)
         })
         .try_for_each(|ch| {
             execute!(
@@ -132,7 +140,7 @@ where
 }
 
 /// Renders a grid of characters, changing the color of a single cell with each iteration.
-fn print_random<W>(mut writer: W, char: char, dur: Duration) -> io::Result<()>
+fn print_random<W>(mut writer: W, ch: char, dur: Duration) -> io::Result<()>
 where
     W: io::Write,
 {
