@@ -1,6 +1,7 @@
+# Nix
 .direnv
 result
 
-# Added by cargo
-
+# Rust
+mutants.out*
 /target
