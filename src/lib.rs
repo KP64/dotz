@@ -111,10 +111,10 @@ pub fn get_duration(ips: f64) -> Result<Duration, String> {
 ///
 /// # Errors
 ///
-pub fn terminal_area_size() -> io::Result<usize> {
-    terminal::size().map(|(cols, rows)| usize::from(cols).saturating_mul(usize::from(rows)))
 /// If no tty is detected.
 #[inline]
+pub fn terminal_area_size() -> io::Result<u32> {
+    terminal::size().map(|(cols, rows)| u32::from(cols).saturating_mul(u32::from(rows)))
 }
 
 #[cfg(test)]

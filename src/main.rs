@@ -6,9 +6,9 @@
 )]
 
 use clap::Parser as _;
-use core::{cmp::Ordering, time::Duration};
+use core::time::Duration;
 use crossterm::{
-    cursor::{self, MoveDown, MoveLeft, MoveRight, MoveUp},
+    cursor,
     event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers},
     execute, queue,
     style::{Print, SetForegroundColor},
@@ -66,19 +66,19 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let cli = Cli::parse();
 
     terminal::enable_raw_mode()?;
-    let mut stdout = io::stdout();
+    let mut stdout = io::stdout().lock();
     execute!(stdout, EnterAlternateScreen, cursor::Hide)?;
 
     let mode = cli.mode.unwrap_or_default();
     match mode {
-        Mode::FillScreen => fill_screen(&stdout, cli.char),
+        Mode::FillScreen => fill_screen(&mut stdout, cli.char),
         Mode::Infinite { speed } => {
             let dur = dotz::get_duration(speed.ips)?;
-            print_infinite(&stdout, cli.char, dur)
+            print_infinite(&mut stdout, cli.char, dur)
         }
         Mode::Random { speed } => {
             let dur = dotz::get_duration(speed.ips)?;
-            print_random(&stdout, cli.char, dur)
+            print_random(&mut stdout, cli.char, dur)
         }
         Mode::Spaced {
             separator,
@@ -86,7 +86,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
             speed,
         } => {
             let dur = dotz::get_duration(speed.ips)?;
-            print_spaced(&stdout, cli.char, dur, separator, spaces)
+            print_spaced(&mut stdout, cli.char, dur, separator, spaces)
         }
     }?;
 
@@ -144,23 +144,20 @@ fn print_random<W>(mut writer: W, ch: char, dur: Duration) -> io::Result<()>
 where
     W: io::Write,
 {
-    let area = dotz::terminal_area_size()?;
-    let mut grid = vec![None; area];
+    let (width, height) = terminal::size()?;
 
     let mut rng = rand::rng();
-    while !is_quitting_char_read(dur)? {
-        let _old_cell_color = grid
-            .choose_mut(&mut rng)
-            .map(|color| color.replace(dotz::generate_ansi_color()));
 
-        for cell in &grid {
-            if let Some(color) = *cell {
-                queue!(writer, SetForegroundColor(color), Print(char))?;
-            } else {
-                queue!(writer, Print(' '))?;
-            }
-        }
-        writer.flush()?;
+    while !is_quitting_char_read(dur)? {
+        let x = rng.random_range(..width);
+        let y = rng.random_range(..height);
+
+        execute!(
+            writer,
+            cursor::MoveTo(x, y),
+            SetForegroundColor(dotz::generate_ansi_color()),
+            Print(ch)
+        )?;
     }
     Ok(())
 }
