@@ -2,7 +2,7 @@
   description = "Fully featured flake ❄️ for rusty 🦀 development";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
     advisory-db = {
       url = "github:rustsec/advisory-db";
@@ -36,28 +36,33 @@
         extraInputsFlake = ./dev;
         module.imports = [ ./dev ];
       };
+
       perSystem =
         {
           config,
+          self',
           inputs',
           lib,
           pkgs,
           ...
         }:
         let
-          craneLib = (inputs.crane.mkLib pkgs).overrideToolchain inputs'.fenix.packages.stable.toolchain;
+          craneLib = lib.pipe pkgs [
+            inputs.crane.mkLib
+            (clib: clib.overrideScope (_: _: { stdenvSelector = _: self'.devShells.default.stdenv; }))
+            (clib: clib.overrideToolchain inputs'.fenix.packages.stable.toolchain)
+          ];
 
           commonArgs = {
             src = craneLib.cleanCargoSource ./.;
             strictDeps = true;
-            nativeBuildInputs = lib.optional pkgs.stdenv.isLinux pkgs.mold;
           };
 
           cargoArtifacts = craneLib.buildDepsOnly commonArgs;
-          sneaky-secrets = craneLib.buildPackage (commonArgs // { inherit cargoArtifacts; });
+          dotz = craneLib.buildPackage (commonArgs // { inherit cargoArtifacts; });
         in
         {
-          packages.default = sneaky-secrets;
+          packages.default = dotz;
 
           checks = config.packages // {
             audit = craneLib.cargoAudit {
