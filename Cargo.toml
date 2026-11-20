@@ -6,18 +6,17 @@ publish = false
 license = "Unlicense"
 description = "A colorscript that gradually fills your screen with (a) character."
 readme = "README.md"
-homepage = "https://github.com/KP64/dotz"
 repository = "https://github.com/KP64/dotz"
 keywords = ["cli, terminal, ricing, color, script"]
 categories = ["command-line-utilities"]
 
 [dependencies]
-clap = { version = "=4.6.1", features = ["derive"] }
+clap = { version = "=4.6.9", features = ["derive"] }
 crossterm = { version = "=0.29.0", default-features = false, features = [
   "events",
   "windows",
 ] }
-rand = "=0.10.1"
+rand = "=0.10.4"
 
 [profile.release]
 lto = true
@@ -50,6 +49,7 @@ exhaustive_structs = "allow"
 separated_literal_suffix = "allow"
 float_arithmetic = "allow"
 multiple_crate_versions = "allow"
+unneeded_field_pattern = "allow"
 
 [lints.rust]
 absolute_paths_not_starting_with_crate = "warn"

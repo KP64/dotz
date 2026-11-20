@@ -72,9 +72,13 @@ impl fmt::Display for Mode {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let str = match *self {
             Self::FillScreen => "fill-screen",
-            Self::Infinite { .. } => "infinite",
-            Self::Random { .. } => "random",
-            Self::Spaced { .. } => "spaced",
+            Self::Infinite { speed: _ } => "infinite",
+            Self::Random { speed: _ } => "random",
+            Self::Spaced {
+                speed: _,
+                separator: _,
+                spaces: _,
+            } => "spaced",
         };
 
         f.write_str(str)

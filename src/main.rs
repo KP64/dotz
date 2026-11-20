@@ -6,7 +6,7 @@
 )]
 
 use clap::Parser as _;
-use core::{iter, time::Duration};
+use core::time::Duration;
 use crossterm::{
     cursor,
     event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers},
@@ -51,12 +51,12 @@ fn is_quitting_char_read(dur: Duration) -> io::Result<bool> {
                 code: KeyCode::Char('q'),
                 kind: KeyEventKind::Press,
                 modifiers: KeyModifiers::NONE,
-                ..
+                state: _,
             } | KeyEvent {
                 code: KeyCode::Char('c'),
                 kind: KeyEventKind::Press,
                 modifiers: KeyModifiers::CONTROL,
-                ..
+                state: _,
             },
         )
     ))
@@ -129,16 +129,14 @@ fn print_infinite<W>(mut writer: W, char: char, dur: Duration) -> io::Result<()>
 where
     W: io::Write,
 {
-    iter::once(())
-        .cycle()
-        .take_while(|&()| is_quitting_char_read(dur).is_ok_and(|should_quit| !should_quit))
-        .try_for_each(|()| {
-            execute!(
-                writer,
-                SetForegroundColor(dotz::generate_ansi_color()),
-                Print(char)
-            )
-        })
+    while is_quitting_char_read(dur).is_ok_and(|should_quit| !should_quit) {
+        execute!(
+            writer,
+            SetForegroundColor(dotz::generate_ansi_color()),
+            Print(char)
+        )?;
+    }
+    Ok(())
 }
 
 /// Renders a grid of characters, changing the color of a single cell with each iteration.
@@ -150,19 +148,15 @@ where
 
     let mut rng = rand::rng();
 
-    iter::once(())
-        .cycle()
-        .map_while(|()| {
-            is_quitting_char_read(dur)
-                .is_ok_and(|should_quit| !should_quit)
-                .then(|| (rng.random_range(..width), rng.random_range(..height)))
-        })
-        .try_for_each(|(x, y)| {
-            execute!(
-                writer,
-                cursor::MoveTo(x, y),
-                SetForegroundColor(dotz::generate_ansi_color()),
-                Print(ch)
-            )
-        })
+    while is_quitting_char_read(dur).is_ok_and(|should_quit| !should_quit) {
+        let (x, y) = (rng.random_range(..width), rng.random_range(..height));
+
+        execute!(
+            writer,
+            cursor::MoveTo(x, y),
+            SetForegroundColor(dotz::generate_ansi_color()),
+            Print(ch)
+        )?;
+    }
+    Ok(())
 }
